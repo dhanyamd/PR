@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Request
 from host.host import MCPHost 
 from config import settings 
-import json 
 import logging
 import uvicorn 
 import utils.opik_utils as opik_utils
 
-SYSTEM_PROMPT_NAME = "scope_pr_review_prompt" 
+# Must match @agent_scope_mcp.prompt(name=...) on the MCP server
+SYSTEM_PROMPT_NAME = "pr_review_prompt" 
 
 from contextlib import asynccontextmanager 
 
@@ -37,7 +37,10 @@ async def handle_github_webhook(request: Request):
             logger.info(f"Processing PR opened event: id={pr['id']} url={pr['url']}")
             logger.info("Requesting system prompt from MCPHost...")
             
-            system_prompt = await client.get_system_prompt(SYSTEM_PROMPT_NAME,{ "arguments" : json.dumps({"pr_id": str(pr["id"]), "pr_url": str(pr["url"]) } )})
+            system_prompt = await client.get_system_prompt(
+                SYSTEM_PROMPT_NAME,
+                {"pr_id": str(pr["id"]), "pr_url": str(pr["url"])},
+            )
             logger.info(f"System prompt received: {system_prompt}")
             logger.info("Processing query with Gemini...")
             
