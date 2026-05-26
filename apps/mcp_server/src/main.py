@@ -6,7 +6,7 @@ import utils.opik_utils as opik_utils
 
 def main():
     mcp_tool_manager = McpServersRegistry()
-    asyncio.run(mcp_tool_manager.initialize)
+    asyncio.run(mcp_tool_manager.initialize())
     
     mcp_tool_manager.get_registry().run(
         transport="streamable-http", host="localhost", port=settings.REGISTRY_PORT

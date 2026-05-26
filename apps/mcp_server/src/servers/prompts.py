@@ -60,9 +60,17 @@ Always include:
 - **Requirement check result**
 - **Improvement suggestions**
 
+## GitHub MCP tools
+Use the prefixed GitHub tools (for example `github_get_pull_request`, `github_get_pull_request_diff`,
+`github_get_pull_request_files`) with:
+- owner: `{owner}`
+- repo: `{repo}`
+- pullNumber: `{pull_number}`
+
 Current PR context:
 - PR ID: {pr_id}
 - PR URL: {pr_url}
+- owner / repo / pullNumber: {owner} / {repo} / {pull_number}
 """
 
 PR_REVIEW_PROMPT = VersionedPrompt("pr-review-prompt", _PR_REVIEW_PROMPT)

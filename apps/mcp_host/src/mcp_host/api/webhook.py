@@ -5,8 +5,8 @@ import logging
 import uvicorn 
 import utils.opik_utils as opik_utils
 
-# Must match @agent_scope_mcp.prompt(name=...) on the MCP server
-SYSTEM_PROMPT_NAME = "pr_review_prompt" 
+# Registry imports agent_scope_mcp with prefix "scope" (see tool_registry.py)
+SYSTEM_PROMPT_NAME = "scope_pr_review_prompt" 
 
 from contextlib import asynccontextmanager 
 
@@ -34,12 +34,28 @@ async def handle_github_webhook(request: Request):
         if payload.get("action") == "opened":
             
             pr = payload["pull_request"]
-            logger.info(f"Processing PR opened event: id={pr['id']} url={pr['url']}")
+            repository = payload.get("repository", {})
+            owner = repository.get("owner", {}).get("login", "")
+            repo = repository.get("name", "")
+            pull_number = pr.get("number", "")
+            logger.info(
+                "Processing PR opened event: %s/%s#%s url=%s",
+                owner,
+                repo,
+                pull_number,
+                pr.get("url"),
+            )
             logger.info("Requesting system prompt from MCPHost...")
-            
+
             system_prompt = await client.get_system_prompt(
                 SYSTEM_PROMPT_NAME,
-                {"pr_id": str(pr["id"]), "pr_url": str(pr["url"])},
+                {
+                    "pr_id": str(pr["id"]),
+                    "pr_url": str(pr["url"]),
+                    "owner": str(owner),
+                    "repo": str(repo),
+                    "pull_number": str(pull_number),
+                },
             )
             logger.info(f"System prompt received: {system_prompt}")
             logger.info("Processing query with Gemini...")

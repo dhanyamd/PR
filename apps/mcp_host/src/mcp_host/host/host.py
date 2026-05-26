@@ -10,6 +10,7 @@ from google.genai.types import Tool
 
 from config import settings
 from host.connection_manager import ConnectionManager
+from utils.mcp_compat import mcp_tool_result_to_payload
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mcp_host")
 SKIPPABLE_PROPS = ["additional_properties", "additionalProperties", "$schema"]
@@ -81,12 +82,13 @@ class MCPHost:
                     function_call_found = True
                     function_call = part.function_call
                     try:
-                        result = await self.connection_manager.call_tool(
+                        raw = await self.connection_manager.call_tool(
                             function_call.name, dict(function_call.args)
                         )
+                        result = mcp_tool_result_to_payload(raw)
                     except Exception as e:
                         logger.error(f"Error during tool call '{function_call.name}': {e}")
-                        result = f"[Error during tool call: {e}]"
+                        result = {"error": str(e)}
                     function_response_part = types.Part.from_function_response(
                         name=function_call.name,
                         response={"result": result},
@@ -106,28 +108,33 @@ class MCPHost:
     @opik.track(name="get-mcp-tools", type="general")
     async def get_mcp_tools(self) -> list[Tool]:
         tools = await self.connection_manager.get_mcp_tools()
-        return [
-            types.Tool(
-                function_declarations=[
-                    {
-                        "name": tool.name,
-                        "description": tool.description,
-                        "parameters": strip_additional_properties({
-                            k: v
-                            for k, v in tool.inputSchema.items()
-                            if k not in SKIPPABLE_PROPS
-                        }),
-                    }
-                ]
+        gemini_tools: list[Tool] = []
+        for tool in tools.tools:
+            schema = getattr(tool, "inputSchema", None) or getattr(tool, "input_schema", None)
+            if not isinstance(schema, dict):
+                logger.warning("Skipping tool %s: missing input schema", tool.name)
+                continue
+            gemini_tools.append(
+                types.Tool(
+                    function_declarations=[
+                        {
+                            "name": tool.name,
+                            "description": tool.description or "",
+                            "parameters": strip_additional_properties({
+                                k: v for k, v in schema.items() if k not in SKIPPABLE_PROPS
+                            }),
+                        }
+                    ]
+                )
             )
-            for tool in tools.tools
-        ]
+        return gemini_tools
 
     @opik.track(name="call-tool", type="tool")
     async def call_tool(self, function_name: str, function_args: dict) -> Any:
         if not self.connection_manager.is_initialized:
             raise RuntimeError("ConnectionManager is not initialized. Call initialize_all() first.")
-        return await self.connection_manager.call_tool(function_name, function_args)
+        raw = await self.connection_manager.call_tool(function_name, function_args)
+        return mcp_tool_result_to_payload(raw)
 
     @opik.track(name="cleanup", type="general")
     async def cleanup(self):
