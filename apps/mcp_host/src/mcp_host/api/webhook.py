@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from host.host import MCPHost 
-from config import settings 
+from config.settings import settings 
 import logging
 import uvicorn 
 import utils.opik_utils as opik_utils

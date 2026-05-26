@@ -1,6 +1,6 @@
 import opik 
 from opik import opik_context
-from config import settings
+from config.settings import settings
 from contextlib import AsyncExitStack
 from typing import Optional
 from mcp import ClientSession, StdioServerParameters

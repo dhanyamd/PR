@@ -8,7 +8,7 @@ from google import genai
 from google.genai import types
 from google.genai.types import Tool
 
-from config import settings
+from config.settings import settings
 from host.connection_manager import ConnectionManager
 from utils.mcp_compat import mcp_tool_result_to_payload
 logging.basicConfig(level=logging.INFO)

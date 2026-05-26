@@ -11,7 +11,8 @@ class Settings(BaseSettings):
     # --- Environment loading ---
     model_config: SettingsConfigDict = SettingsConfigDict(
         env_file=".env",
-        env_file_encoding="utf-8"
+        env_file_encoding="utf-8",
+        extra="ignore"
     )
 
     # --- Asana API Token ---
