@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🤖 PR Agent
+# 🤖 PR
 
 ### AI-powered Pull Request reviewer that automatically reviews code, checks Asana tasks, and posts structured feedback to Slack — the moment a PR is opened.
 
