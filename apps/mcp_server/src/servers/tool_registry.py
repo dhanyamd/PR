@@ -30,10 +30,16 @@ class McpServersRegistry:
         await self.registry.import_server(slack_mcp, prefix="slack")
         await self.registry.import_server(github_mcp, prefix="github")
 
-        all_tools = await self.registry.get_tools()
-        for tool in all_tools.values():
-            if tool.tags:
-                self.all_tags.update(tool.tags)
+        all_tools = self.registry.list_tools()
+        if hasattr(all_tools, "__await__"):
+            all_tools = await all_tools
+        
+        # list_tools might return a list of tool objects or dicts
+        tool_items = all_tools if isinstance(all_tools, list) else all_tools.values()
+        for tool in tool_items:
+            tags = getattr(tool, "tags", None)
+            if tags:
+                self.all_tags.update(tags)
 
         log.info(f"Registry initialization complete. Found tags: {self.all_tags}")
         self._is_initialized = True

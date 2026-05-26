@@ -2,7 +2,7 @@ import os
 import opik
 from loguru import logger
 from opik.configurator.configure import OpikConfigurator
-from config import settings
+from config.settings import settings
 
 def configure() -> None:
     """
