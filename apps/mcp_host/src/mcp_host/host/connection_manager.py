@@ -31,6 +31,7 @@ class ConnectionManager:
                 stdio_client(StdioServerParameters(command="python", args=[config["path"]]))
             )
             self.session = await self.exit_stack.enter_async_context(ClientSession(*stdio_transport))
+            await self.session.initialize()
 
         elif config["type"] == "streamable-http":
             context = streamablehttp_client(url=config["url"], headers=config.get("headers"))
@@ -38,8 +39,6 @@ class ConnectionManager:
 
             read_stream, write_stream, get_session_id = await self.exit_stack.enter_async_context(context)
             await self._run_session(read_stream, write_stream, get_session_id)
-
-        await self.session.initialize()
         try:
             tools = await self.session.list_tools()
             print(f"🔧 Tools available for {server_key}:")
